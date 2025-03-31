@@ -6,7 +6,7 @@
 """
 
  
-
+#%% 
 import torch
 import numpy as np
 from datetime import datetime
@@ -80,13 +80,14 @@ class CNN(nn.Module):
 
 
 window_size = 20
-stride = 10
+stride = 20
 threshold = 0.5
 
 
 def sliding_window_inference(model, image, window_size=window_size, stride=stride, classification_threshold=threshold):
     c, h, w = image.shape  # Image (3 canaux)
     print(c, h, w)
+    
     
     # Cartes de sortie
     classification_map = np.zeros((h, w))  # Stocke les scores de classification
@@ -96,37 +97,40 @@ def sliding_window_inference(model, image, window_size=window_size, stride=strid
     for i in range(0, h - window_size + 1, stride):
         for j in range(0, w - window_size + 1, stride):
             patch = image[:, i:i + window_size, j:j + window_size]  # Extraire un patch (3, 20, 20)
-            patch_tensor = torch.tensor(patch).unsqueeze(0).float()  # (1, 3, 20, 20)
-            #print(patch_tensor , patch_tensor.shape)
+            #print(np.shape(patch))
+            #patch_tp =  np.transpose(patch, (1, 2, 0)) 
+            #print(np.shape(patch_tp))
+            patch_tensor = torch.tensor(patch).unsqueeze(0).float() #transform(patch_tp).unsqueeze(0).float()  # (1, 3, 20, 20)
+            #print(patch_tensor.shape) 
             
-            plt.imshow(patch.permute(1, 2, 0).numpy())
-            plt.show()
-            print(patch[0][13][12])
+            
+            with torch.no_grad():
+                classification_logits, regression_output = model(patch_tensor)  # Deux sorties du modèle
+
+            print(classification_logits)
+              
+            classification_probs = torch.softmax(classification_logits, dim=-1)  # Convertir logits en probabilité
+
+            classification_score = classification_probs[0][0].item()  # Probabilité de la classe "dislocation"
+
+            print(classification_probs)
 
             quit()
 
-
-            with torch.no_grad():
-                regression_output, classification_logits = model(patch_tensor)  # Deux sorties du modèle
-
-            #print(classification_logits)    
-            classification_score = torch.sigmoid(classification_logits[0][0]).item()  # Convertir logits en probabilité
-            
             # Ajouter le score de classification à la carte
             classification_map[i:i + window_size, j:j + window_size] += classification_score
 
             accumulator_map[i:i + window_size, j:j + window_size] += 1
-
-
 
             # Si le modèle détecte une dislocation (score > seuil), enregistrer la position
             if classification_score > classification_threshold:
 
                 #print(classification_score)
                 reg_coords = regression_output.numpy().flatten()  # Convertir en numpy
-                x_pred = reg_coords[0]   + j + 10   # Convertir en coordonnée absolue
-                y_pred = reg_coords[1]  + i + 10 
-                print(x_pred, y_pred)
+                x_pred = reg_coords[0]  + j    # Convertir en coordonnée absolue
+                y_pred = reg_coords[1]  + i  
+                print(x_pred, y_pred, classification_score)
+                
                 regression_map.append((x_pred, y_pred))  # Ajouter la position prédite
             
             
@@ -134,32 +138,60 @@ def sliding_window_inference(model, image, window_size=window_size, stride=strid
     return classification_map, regression_map, accumulator_map
 
 # Charger l’image et convertir en tenseur PyTorch
-image = Image.open(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Generated_Images\Image_0.png")
 
-image_for_model = image.convert("L")
+def load_and_stack_images(image_paths):
+    
+    # Liste pour stocker les tenseurs d'images
+    images_tensor = []
+    
+    for path in image_paths:
+        
+        # Chargement et transformation
+        img = Image.open(path).convert("L")
+        img_tensor = transform(img) #np.array(img)  # Shape: [1, H, W]
+        print(img_tensor.shape)
+        images_tensor.append(img_tensor)
+    
+    # Empilement des images
+    stacked = torch.cat(images_tensor, dim=0)#np.stack(images_np)  # Shape: [C, H, W]
+    
+    return stacked
+
+
+#For Low angle
+
+image_paths_low = [
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A23_black_23.png",
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A22_black_22.png", 
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A33_black_33.png"
+]
+
+#For High angle
+image_paths_High = [
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A23_black_23.png",
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A22_black_22.png", 
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A33_black_33.png"
+]
+
+transform = transforms.Compose([transforms.ToTensor()])
+
+stacked_images = load_and_stack_images(image_paths_low)
+
+#plt.imshow(stacked_images.permute(1, 2, 0).numpy())
+#plt.show()
 
 
 
-plot_image = image.convert("RGB")
-
-transform = transforms.Compose([
-    transforms.Resize((400, 400)),  # Redimensionner l'image si besoin
-    transforms.ToTensor()  # Convertir en tenseur
-])
+print(np.shape(stacked_images))
 
 
+
+
+image_23 = Image.open(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A23_color_23.png") 
+
+plot_image = image_23.convert("RGB")
 plot_image = transform(plot_image)
 
-image_tensor = transform(image_for_model)  # Résultat : Tensor (C, H, W)
-
-print(image_tensor[:, 2].max(), image_tensor[:, 2].min(), image_tensor.shape)
-
-
-
-channels = [image_tensor, image_tensor, image_tensor]
-stacked = torch.cat(channels, dim=0)  # Shape: (3, 20, 20)
-
-print(stacked.shape)
 
 # Charger ton modèle pré-entraîné
 model = CNN()
@@ -167,11 +199,12 @@ model.load_state_dict(torch.load(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Mach
 model.eval()  # Mettre en mode évaluation
 
 # Appliquer l'inférence
-classification_map, regression_map, accumulator_map = sliding_window_inference(model, stacked)
+classification_map, regression_map, accumulator_map = sliding_window_inference(model, stacked_images)
 
 
 
-c, h, w = stacked.shape
+
+c, h, w = stacked_images.shape
 
 # Calcul de la moyenne
 # Éviter la division par zéro en vérifiant l'accumulateur
@@ -183,7 +216,7 @@ classification_map = np.where(classification_map > threshold, classification_map
 
 
 # Convertir en format (H, W, C) pour Matplotlib
-image_np = stacked.permute(1, 2, 0).numpy()
+#image_np = stacked.permute(1, 2, 0).numpy()
 plot_image = plot_image.permute(1, 2, 0).numpy()
 
 # Afficher la carte de classification et de régression
@@ -194,10 +227,9 @@ plt.figure(figsize=(12, 6))
 window_size=window_size
 stride=stride
 
-plt.imshow(image_np)  # Image en fond
+plt.imshow(plot_image )  # Image en fond
 
-plt.show()
-quit()
+
 #plt.imshow(classification_map, cmap='gray', alpha=0.7)  # Heatmap superposée
 
 colors = [
@@ -241,13 +273,13 @@ for i in range(0, h - window_size + 1, stride):
 
 l=0 
 for (x, y) in regression_map:
-    plt.scatter(x, y, color=colors[l % len(colors)], s=5)  # Points rouges pour les dislocations
+    plt.scatter(x, y, color=colors[l % len(colors)], s=1)  # Points rouges pour les dislocations
     l+=1
 
 #plt.ylim(250, 150)
 plt.title("Classification and Regression Map (Dislocations Positions)")
 
-plt.savefig(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Generated_Images\Dislocation_presence_and_positions_predictions_Image_0_stride_10.png", dpi=300)
+plt.savefig(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\Dislocation_presence_and_positions_predictions_GB_Low_365_stride_test.png", dpi=300)
 
 #plt.show()
 

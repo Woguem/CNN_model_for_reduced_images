@@ -40,7 +40,7 @@ torch.cuda.memory_summary(device=None, abbreviated=False)
 batch_size = 32          # 16 32 64 Number of images per batch
 learning_rate = 1e-5       # Learning rate
 weight_decay = 1e-3        # L2 regularisation 1e-2 
-num_epochs =  100        # Number of epochs
+num_epochs =  150        # Number of epochs
 
 
 # ==============================
@@ -89,8 +89,8 @@ print(len(test_loader))
 # 4 Displaying loaded data
 # ========================================================
 
-
 '''
+
 print(f"Nombre d'images : {len(dataset)}") # Data set and image size
 
 #image = dataset[0]  # This gives the first image after transformation
@@ -114,16 +114,17 @@ print("Probabilities:", probabilities.shape)  # (Batch_size, max_dislocations, 2
 
 
 # Show some images
-fig, axes = plt.subplots(8, 4, figsize=(10, 5)) #4, 8
+fig, axes = plt.subplots(8, 4) #4, 8
 axes = axes.flatten()
-for img, ax in zip(images[:32], axes):
+for img, ax in zip(images, axes):
     img = img.numpy().transpose((1, 2, 0))  # Convert to (H, W, C) format
-    ax.imshow(img)
+    ax.imshow(img, cmap="gray")
     ax.axis("off")
 
-plt.savefig("Image_batch")   
+plt.savefig("Image_batch.png")   
 
 #plt.show() 
+
 '''
 
 

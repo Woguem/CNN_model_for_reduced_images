@@ -14,7 +14,7 @@ import seaborn as sns
 import numpy as np
 import os
 import json
-#from torch.nn.utils.rnn import pad_sequence
+from torchvision import transforms
 import torch.nn.functional as F
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -27,89 +27,6 @@ import torch.nn.init as init
 # ==============================
 # 1 Dataset construction
 # ==============================
-'''class CustomDataset(Dataset):
-    def __init__(self, root, json_file, transform=None):
-        self.root = root  # Image path
-        self.json_file = json_file  # Path to JSON file
-        self.transform = transform  # Transformations to be applied
-        self.labels_data = self.load_json_data()  # Charger les données JSON
-        self.image_names = self.get_image_files()  # List of image names
-        
-        # Create a scaler to transform labels in the range [0, 1]
-        self.scaler = MinMaxScaler(feature_range=(0, 1))
-
-        # Accumulate all positions
-        all_positions = []
-        for image_name in self.image_names:
-            dislocations = self.labels_data[image_name]["dislocations"]
-            positions = []
-            for dislocation in dislocations:
-                if "x" in dislocation and "y" in dislocation:
-                    positions.append([dislocation["x"], dislocation["y"]])
-            all_positions.extend(positions)
-        
-        # Convert to numpy table and apply fit
-        all_positions = torch.tensor(all_positions, dtype=torch.float32).numpy()  
-        self.scaler.fit(all_positions)  # Fit dataset
-
-        # Saving the scaler after you've made fit
-        scaler_path = os.path.join(self.root, "scaler.pkl")
-        joblib.dump(self.scaler, scaler_path)
-
-    def get_image_files(self):
-        """Returns a list of valid images (with extension .png, .jpg, etc.)"""
-        valid_extensions = ('.png', '.jpg', '.jpeg')   # Valid Extensions
-        image_files = [f for f in os.listdir(self.root) if f.lower().endswith(valid_extensions)]
-        return image_files    
-    
-    def load_json_data(self):
-        """Loads the JSON file and returns the data"""
-        with open(self.json_file, 'r') as f:
-            return json.load(f)
-    
-    def __len__(self):
-        """Returns total number of images"""
-        return len(self.image_names)
-    
-    def __getitem__(self, idx):
-        """Returns an image and its labels"""
-
-        # Get image name
-        image_names = self.image_names[idx]
-        
-        
-        # Load image
-        img_path = os.path.join(self.root, image_names)
-        image = Image.open(img_path) #.convert("RGB")
-        
-        # Obtain dislocations and their labels (positions (x, y) and probabilities (p1, p0))
-        dislocations = self.labels_data[image_names]["dislocations"]
-        
-        # Prepare labels (positions and probabilities)
-        positions = []
-        probabilities = []
-        
-            
-        for dislocation in dislocations:
-            # Filter dislocations with valid coordinates
-            if "x" in dislocation and "y" in dislocation :
-                positions.append([dislocation["x"], dislocation["y"]])
-                probabilities.append([dislocation["p1"], dislocation["p0"]])
-        
-        # Transform positions in the interval (0,1) and convert them into tensors
-        positions =  np.array(positions, dtype=np.float32)     
-        positions = self.scaler.transform(positions)
-        positions = torch.tensor(positions, dtype=torch.float32) 
-        probabilities = torch.tensor(probabilities, dtype=torch.float32)
-
-        
-        # Apply transformations (if supplied)
-        if self.transform:
-            image = self.transform(image)
-        
-        return image, positions, probabilities, image_names '''
-
-
 class CustomDataset(Dataset):
     def __init__(self, root, json_file, transform=None):
         self.root = root  # Image path
@@ -186,6 +103,7 @@ class CustomDataset(Dataset):
             # Application des transformations (incluant ToTensor)
             if self.transform:
                 img = self.transform(img)  # Shape: (1, 20, 20)
+                
     
             channels.append(img)
 
