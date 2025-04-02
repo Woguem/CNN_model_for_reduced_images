@@ -100,36 +100,39 @@ def sliding_window_inference(model, image, window_size=window_size, stride=strid
             #print(np.shape(patch))
             #patch_tp =  np.transpose(patch, (1, 2, 0)) 
             #print(np.shape(patch_tp))
-            patch_tensor = torch.tensor(patch).unsqueeze(0).float() #transform(patch_tp).unsqueeze(0).float()  # (1, 3, 20, 20)
+            patch_tensor = torch.tensor(patch).unsqueeze(0).float() #patch_tensor = transform(patch_tp).unsqueeze(0).float()# #transform(patch_tp).unsqueeze(0).float()  # (1, 3, 20, 20)
             #print(patch_tensor.shape) 
             
             
             with torch.no_grad():
                 classification_logits, regression_output = model(patch_tensor)  # Deux sorties du modèle
 
-            print(classification_logits)
+            #print(classification_logits)
               
             classification_probs = torch.softmax(classification_logits, dim=-1)  # Convertir logits en probabilité
 
             classification_score = classification_probs[0][0].item()  # Probabilité de la classe "dislocation"
 
-            print(classification_probs)
+            #print(classification_probs)
 
-            quit()
+            #quit()
 
-            # Ajouter le score de classification à la carte
-            classification_map[i:i + window_size, j:j + window_size] += classification_score
-
-            accumulator_map[i:i + window_size, j:j + window_size] += 1
-
+            
             # Si le modèle détecte une dislocation (score > seuil), enregistrer la position
             if classification_score > classification_threshold:
 
+                # Ajouter le score de classification à la carte
+                classification_map[i:i + window_size, j:j + window_size] += classification_score
+
+                accumulator_map[i:i + window_size, j:j + window_size] += 1
+
+
                 #print(classification_score)
                 reg_coords = regression_output.numpy().flatten()  # Convertir en numpy
-                x_pred = reg_coords[0]  + j    # Convertir en coordonnée absolue
-                y_pred = reg_coords[1]  + i  
+                x_pred = reg_coords[0]*20  + j    # Convertir en coordonnée absolue
+                y_pred = reg_coords[1]*20  + i  
                 print(x_pred, y_pred, classification_score)
+
                 
                 regression_map.append((x_pred, y_pred))  # Ajouter la position prédite
             
@@ -148,12 +151,12 @@ def load_and_stack_images(image_paths):
         
         # Chargement et transformation
         img = Image.open(path).convert("L")
-        img_tensor = transform(img) #np.array(img)  # Shape: [1, H, W]
-        print(img_tensor.shape)
+        img_tensor = transform(img) # np.array(img) ## Shape: [1, H, W]
+        #print(img_tensor.shape)
         images_tensor.append(img_tensor)
     
     # Empilement des images
-    stacked = torch.cat(images_tensor, dim=0)#np.stack(images_np)  # Shape: [C, H, W]
+    stacked = torch.cat(images_tensor, dim=0) #np.stack(images_tensor) #  # Shape: [C, H, W]
     
     return stacked
 
@@ -161,33 +164,36 @@ def load_and_stack_images(image_paths):
 #For Low angle
 
 image_paths_low = [
-    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A23_black_23.png",
-    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A22_black_22.png", 
-    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A33_black_33.png"
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A23_color_23.png",
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A22_color_22.png", 
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A33_color_33.png"
 ]
 
 #For High angle
-image_paths_High = [
-    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A23_black_23.png",
-    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A22_black_22.png", 
-    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A33_black_33.png"
+image_paths_high = [
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A23_color_23.png",
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A22_color_22.png", 
+    r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A33_color_33.png"
 ]
 
 transform = transforms.Compose([transforms.ToTensor()])
 
-stacked_images = load_and_stack_images(image_paths_low)
+stacked_images = load_and_stack_images(image_paths_high)
+#stacked_images = load_and_stack_images(image_paths_high)
 
 #plt.imshow(stacked_images.permute(1, 2, 0).numpy())
 #plt.show()
 
 
 
-print(np.shape(stacked_images))
+print(stacked_images.shape)
 
 
 
 
-image_23 = Image.open(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A23_color_23.png") 
+#image_23 = Image.open(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A23_color_23.png") 
+image_23 = Image.open(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A23_color_23.png") 
+
 
 plot_image = image_23.convert("RGB")
 plot_image = transform(plot_image)
@@ -195,7 +201,7 @@ plot_image = transform(plot_image)
 
 # Charger ton modèle pré-entraîné
 model = CNN()
-model.load_state_dict(torch.load(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Best_Models_models\Best_Model_CNN.pth", map_location=torch.device('cpu')))  # Charger le modèle
+model.load_state_dict(torch.load(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Best_Models_models_trainned_on_color_2020\Best_Model_CNN.pth", map_location=torch.device('cpu')))  # Charger le modèle
 model.eval()  # Mettre en mode évaluation
 
 # Appliquer l'inférence
@@ -204,7 +210,7 @@ classification_map, regression_map, accumulator_map = sliding_window_inference(m
 
 
 
-c, h, w = stacked_images.shape
+c, h, w = np.shape(stacked_images) #.shape
 
 # Calcul de la moyenne
 # Éviter la division par zéro en vérifiant l'accumulateur
@@ -212,20 +218,22 @@ with np.errstate(divide='ignore', invalid='ignore'):
     classification_map /= accumulator_map
 
 
-classification_map = np.where(classification_map > threshold, classification_map, np.nan)
+#classification_map = np.where(classification_map > threshold, classification_map, np.nan)
 
 
 # Convertir en format (H, W, C) pour Matplotlib
-#image_np = stacked.permute(1, 2, 0).numpy()
+#image_np = np.transpose(stacked_images, (1, 2, 0)) #.permute(1, 2, 0).numpy()
+
 plot_image = plot_image.permute(1, 2, 0).numpy()
 
 # Afficher la carte de classification et de régression
-plt.figure(figsize=(12, 6))
+fig, ax = plt.subplots(dpi=300, figsize=(13.5, 9))
 
 # Heatmap de la classification
 
 window_size=window_size
 stride=stride
+
 
 plt.imshow(plot_image )  # Image en fond
 
@@ -253,19 +261,26 @@ for i in range(0, h - window_size + 1, stride):
         # Extraire la sous-région
         sub_region = classification_map[i:i + window_size, j:j + window_size]
         
-        if not np.isnan(sub_region).any() :
+        #if not np.isnan(sub_region).any() :
+        if np.all(sub_region > 0.5) :
 
+            #print(k)
             #print(sub_region)
             x_min, x_max = j, j + window_size
             y_min, y_max = i, i + window_size
 
+            # Draw rectangle
+            rect = plt.Rectangle((x_min, y_min), window_size, window_size,
+                                fill=False, edgecolor=colors[k % len(colors)], linewidth=0.5)
+            ax.add_patch(rect)
+
             # Tracer les lignes horizontales
-            plt.plot([x_min, x_max], [y_min, y_min], color=colors[k % len(colors)], linestyle='-', linewidth=0.5)
+            '''plt.plot([x_min, x_max], [y_min, y_min], color=colors[k % len(colors)], linestyle='-', linewidth=0.5)
             plt.plot([x_min, x_max], [y_max, y_max], color=colors[k % len(colors)], linestyle='-', linewidth=0.5)
 
             # Tracer les lignes verticales
             plt.plot([x_min, x_min], [y_min, y_max], color=colors[k % len(colors)], linestyle='-', linewidth=0.5)
-            plt.plot([x_max, x_max], [y_min, y_max], color=colors[k % len(colors)], linestyle='-', linewidth=0.5) 
+            plt.plot([x_max, x_max], [y_min, y_max], color=colors[k % len(colors)], linestyle='-', linewidth=0.5)''' 
 
             k+=1
 
@@ -273,13 +288,17 @@ for i in range(0, h - window_size + 1, stride):
 
 l=0 
 for (x, y) in regression_map:
-    plt.scatter(x, y, color=colors[l % len(colors)], s=1)  # Points rouges pour les dislocations
+    plt.scatter(x, y, color=colors[l % len(colors)], s=0.5)  # Points rouges pour les dislocations
     l+=1
 
+ax.set_aspect('equal')
+ax.set_axis_off()
 #plt.ylim(250, 150)
-plt.title("Classification and Regression Map (Dislocations Positions)")
+#plt.title("Classification and Regression Map (Dislocations Positions)")
 
-plt.savefig(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\Dislocation_presence_and_positions_predictions_GB_Low_365_stride_test.png", dpi=300)
+#plt.savefig(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\Dislocation_presence_and_positions_predictions_GB_low_365_stride_20.png", bbox_inches='tight', pad_inches=0, dpi=500)
+plt.savefig(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\Dislocation_presence_and_positions_predictions_GB_High_5_stride_20.png", bbox_inches='tight', pad_inches=0, dpi=500)
+
 
 #plt.show()
 
