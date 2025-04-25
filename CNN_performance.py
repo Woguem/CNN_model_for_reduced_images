@@ -113,7 +113,7 @@ def sliding_window_inference(model, image, window_size=window_size, stride=strid
 
             classification_score = classification_probs[0][0].item()  # Probabilité de la classe "dislocation"
 
-            #print(classification_probs)
+            #print(classification_score)
 
             #quit()
 
@@ -178,7 +178,7 @@ image_paths_high = [
 
 transform = transforms.Compose([transforms.ToTensor()])
 
-stacked_images = load_and_stack_images(image_paths_high)
+stacked_images = load_and_stack_images(image_paths_low)
 #stacked_images = load_and_stack_images(image_paths_high)
 
 #plt.imshow(stacked_images.permute(1, 2, 0).numpy())
@@ -191,8 +191,8 @@ print(stacked_images.shape)
 
 
 
-#image_23 = Image.open(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A23_color_23.png") 
-image_23 = Image.open(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A23_color_23.png") 
+image_23 = Image.open(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\figure_A23_color_23.png") 
+# image_23 = Image.open(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\figure_A23_color_23.png") 
 
 
 plot_image = image_23.convert("RGB")
@@ -201,7 +201,7 @@ plot_image = transform(plot_image)
 
 # Charger ton modèle pré-entraîné
 model = CNN()
-model.load_state_dict(torch.load(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Best_Models_models_trainned_on_color_2020\Best_Model_CNN.pth", map_location=torch.device('cpu')))  # Charger le modèle
+model.load_state_dict(torch.load(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Results_gray\Best_Models_models\Best_Model_CNN.pth", map_location=torch.device('cpu')))  # Charger le modèle
 model.eval()  # Mettre en mode évaluation
 
 # Appliquer l'inférence
@@ -296,15 +296,11 @@ ax.set_axis_off()
 #plt.ylim(250, 150)
 #plt.title("Classification and Regression Map (Dislocations Positions)")
 
-#plt.savefig(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\Dislocation_presence_and_positions_predictions_GB_low_365_stride_20.png", bbox_inches='tight', pad_inches=0, dpi=500)
-plt.savefig(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\Dislocation_presence_and_positions_predictions_GB_High_5_stride_20.png", bbox_inches='tight', pad_inches=0, dpi=500)
+plt.savefig(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\Low_angle_GB_Cu_001_SIGMA365\Gray_model_low_365_stride_20_color_image.png", bbox_inches='tight', pad_inches=0, dpi=500)
+# plt.savefig(r"C:\Users\p09276\Post_doc_Yen_Fred\Projet_Machine_Learning_Julien\GB_Cu_001_Generation\Copper\High_angle_GB_Cu_001_SIGMA5\Color_model_High_5_stride_20.png", bbox_inches='tight', pad_inches=0, dpi=500)
 
 
 #plt.show()
-
-
-
-
 
 
 
