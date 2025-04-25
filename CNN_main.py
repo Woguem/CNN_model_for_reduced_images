@@ -48,7 +48,7 @@ num_epochs =  150        # Number of epochs
 # ==============================
 
 # Load JSON file
-json_file = "/home/woguem/Bureau/Projet_Machine_Learning/GB_Cu_001_Generation/Generated_Images/Grain_Boundary.json"  # Chemin vers le fichier JSON contenant les labels
+json_file = "/home/woguem/Bureau/Projet_Machine_Learning/GB_Cu_001_Generation/Generated_Images_gray/Grain_Boundary.json"  # Chemin vers le fichier JSON contenant les labels
 
 
 #transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), Normalisation RGB pour avoir des valeur entre (-1,1)
@@ -56,7 +56,7 @@ json_file = "/home/woguem/Bureau/Projet_Machine_Learning/GB_Cu_001_Generation/Ge
 transform = transforms.Compose([transforms.Resize((20, 20)), transforms.ToTensor()]) # transforms.Resize((100, 100)), convert the image into a PyTorch tensor whose pixels are now between (0,1)
 
 
-root = "/home/woguem/Bureau/Projet_Machine_Learning/GB_Cu_001_Generation/Generated_Images"  # Path to image folder
+root = "/home/woguem/Bureau/Projet_Machine_Learning/GB_Cu_001_Generation/Generated_Images_gray"  # Path to image folder
 
 
 dataset = CustomDataset(root=root, json_file=json_file, transform=transform)
